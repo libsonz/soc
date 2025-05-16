@@ -1,0 +1,62 @@
+/home/lamar/Documents/git/matirx-multiplier-soc/rtl/bram.v {1 {vlog -work work -stats=none /home/lamar/Documents/git/matirx-multiplier-soc/rtl/bram.v
+Model Technology ModelSim - Intel FPGA Edition vlog 2020.1 Compiler 2020.02 Feb 28 2020
+-- Compiling module bram
+
+Top level modules:
+	bram
+
+} {} {}} /home/lamar/Documents/git/matirx-multiplier-soc/rtl/full_adder.v {1 {vlog -work work -stats=none /home/lamar/Documents/git/matirx-multiplier-soc/rtl/full_adder.v
+Model Technology ModelSim - Intel FPGA Edition vlog 2020.1 Compiler 2020.02 Feb 28 2020
+-- Compiling module full_adder
+
+Top level modules:
+	full_adder
+
+} {} {}} /home/lamar/Documents/git/matirx-multiplier-soc/rtl/multiplier_adder.v {1 {vlog -work work -stats=none /home/lamar/Documents/git/matirx-multiplier-soc/rtl/multiplier_adder.v
+Model Technology ModelSim - Intel FPGA Edition vlog 2020.1 Compiler 2020.02 Feb 28 2020
+-- Compiling module multiplier_adder
+
+Top level modules:
+	multiplier_adder
+
+} {} {}} /home/lamar/Documents/git/matirx-multiplier-soc/rtl/multiplier_carrysave.v {1 {vlog -work work -stats=none /home/lamar/Documents/git/matirx-multiplier-soc/rtl/multiplier_carrysave.v
+Model Technology ModelSim - Intel FPGA Edition vlog 2020.1 Compiler 2020.02 Feb 28 2020
+-- Compiling module multiplier_carrysave
+
+Top level modules:
+	multiplier_carrysave
+
+} {} {}} /home/lamar/Documents/git/matirx-multiplier-soc/rtl/datapath.v {1 {vlog -work work -stats=none /home/lamar/Documents/git/matirx-multiplier-soc/rtl/datapath.v
+Model Technology ModelSim - Intel FPGA Edition vlog 2020.1 Compiler 2020.02 Feb 28 2020
+-- Compiling module bram
+-- Compiling module pe_no_fifo
+-- Compiling module multiplier_carrysave
+-- Compiling module full_adder
+-- Compiling module multiplier_adder
+-- Compiling module datapath
+
+Top level modules:
+	datapath
+
+} {} {}} /home/lamar/Documents/git/matirx-multiplier-soc/rtl/top.v {1 {vlog -work work -stats=none /home/lamar/Documents/git/matirx-multiplier-soc/rtl/top.v
+Model Technology ModelSim - Intel FPGA Edition vlog 2020.1 Compiler 2020.02 Feb 28 2020
+-- Compiling module top
+
+Top level modules:
+	top
+
+} {} {}} /home/lamar/Documents/git/matirx-multiplier-soc/rtl/controller.v {1 {vlog -work work -stats=none /home/lamar/Documents/git/matirx-multiplier-soc/rtl/controller.v
+Model Technology ModelSim - Intel FPGA Edition vlog 2020.1 Compiler 2020.02 Feb 28 2020
+-- Compiling module controller
+
+Top level modules:
+	controller
+
+} {} {}} /home/lamar/Documents/git/matirx-multiplier-soc/rtl/pe_no_fifo.v {1 {vlog -work work -stats=none /home/lamar/Documents/git/matirx-multiplier-soc/rtl/pe_no_fifo.v
+Model Technology ModelSim - Intel FPGA Edition vlog 2020.1 Compiler 2020.02 Feb 28 2020
+-- Compiling module pe_no_fifo
+
+Top level modules:
+	pe_no_fifo
+
+} {} {}}

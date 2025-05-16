@@ -1,0 +1,218 @@
+m255
+K4
+z2
+!s11f vlog 2020.1 2020.02, Feb 28 2020
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+d/home/lamar/quartus/project1
+vbram
+Z0 !s110 1747381563
+!i10b 1
+!s100 :0F6TJmkF^0c<;VfR31Wn0
+Z1 !s11b Dg1SIo80bB@j0V0VzS_@n1
+I:FMXXHcDkH@OQ@>Z_lSCb1
+Z2 VDg1SIo80bB@j0V0VzS_@n1
+Z3 d/home/lamar/Documents/git/matirx-multiplier-soc
+w1746011787
+8/home/lamar/Documents/git/matirx-multiplier-soc/rtl/bram.v
+F/home/lamar/Documents/git/matirx-multiplier-soc/rtl/bram.v
+!i122 52
+L0 1 50
+Z4 OV;L;2020.1;71
+r1
+!s85 0
+31
+Z5 !s108 1747381563.000000
+Z6 !s107 /home/lamar/Documents/git/matirx-multiplier-soc/rtl/multiplier_adder.v|/home/lamar/Documents/git/matirx-multiplier-soc/rtl/full_adder.v|/home/lamar/Documents/git/matirx-multiplier-soc/rtl/multiplier_carrysave.v|/home/lamar/Documents/git/matirx-multiplier-soc/rtl/pe_no_fifo.v|/home/lamar/Documents/git/matirx-multiplier-soc/rtl/bram.v|/home/lamar/Documents/git/matirx-multiplier-soc/rtl/datapath.v|
+Z7 !s90 -reportprogress|300|-work|work|-stats=none|/home/lamar/Documents/git/matirx-multiplier-soc/rtl/datapath.v|
+!i113 1
+Z8 o-work work
+Z9 tCvgOpt 0
+vcontroller
+!s110 1747297013
+!i10b 1
+!s100 _FZ2n^A@2jUBoXghkGMTi2
+R1
+Ik42Zh]AW@UmdiEFk2M<TY3
+R2
+R3
+w1747030917
+8/home/lamar/Documents/git/matirx-multiplier-soc/rtl/controller.v
+F/home/lamar/Documents/git/matirx-multiplier-soc/rtl/controller.v
+!i122 9
+L0 14 296
+R4
+r1
+!s85 0
+31
+!s108 1747297013.000000
+!s107 /home/lamar/Documents/git/matirx-multiplier-soc/rtl/controller.v|
+!s90 -reportprogress|300|-work|work|-stats=none|/home/lamar/Documents/git/matirx-multiplier-soc/rtl/controller.v|
+!i113 1
+R8
+R9
+vdatapath
+R0
+!i10b 1
+!s100 _^H>Hii>Q]D9QAEZB3kLP2
+R1
+IcRHPlME6gnO_:FSjiN2lk2
+R2
+R3
+w1747381112
+8/home/lamar/Documents/git/matirx-multiplier-soc/rtl/datapath.v
+F/home/lamar/Documents/git/matirx-multiplier-soc/rtl/datapath.v
+!i122 52
+L0 32 357
+R4
+r1
+!s85 0
+31
+R5
+R6
+R7
+!i113 1
+R8
+R9
+vdatapath_tb
+!s110 1747384557
+!i10b 1
+!s100 4]?EXTad9T;P0[noo:1@l3
+R1
+IQ@d][nPl4hPo7CdjOLLO@0
+R2
+R3
+w1747384537
+8/home/lamar/Documents/git/matirx-multiplier-soc/tb/datapath_tb.v
+F/home/lamar/Documents/git/matirx-multiplier-soc/tb/datapath_tb.v
+!i122 56
+L0 17 614
+R4
+r1
+!s85 0
+31
+!s108 1747384557.000000
+!s107 /home/lamar/Documents/git/matirx-multiplier-soc/tb/datapath_tb.v|
+!s90 -reportprogress|300|-work|work|-stats=none|/home/lamar/Documents/git/matirx-multiplier-soc/tb/datapath_tb.v|
+!i113 1
+R8
+R9
+vfull_adder
+R0
+!i10b 1
+!s100 >65TjRDJ<ioJ^a=]Z=:3P2
+R1
+I8K=cz[VeoZJ<b81VUncDc3
+R2
+R3
+w1745316492
+8/home/lamar/Documents/git/matirx-multiplier-soc/rtl/full_adder.v
+F/home/lamar/Documents/git/matirx-multiplier-soc/rtl/full_adder.v
+!i122 52
+L0 1 13
+R4
+r1
+!s85 0
+31
+R5
+R6
+R7
+!i113 1
+R8
+R9
+vmultiplier_adder
+R0
+!i10b 1
+!s100 BRCTE4In5eGz=8Y<jfB@S1
+R1
+I:L9fbi]jUj4DHo[`Oj?XP0
+R2
+R3
+w1745317438
+8/home/lamar/Documents/git/matirx-multiplier-soc/rtl/multiplier_adder.v
+F/home/lamar/Documents/git/matirx-multiplier-soc/rtl/multiplier_adder.v
+!i122 52
+L0 1 19
+R4
+r1
+!s85 0
+31
+R5
+R6
+R7
+!i113 1
+R8
+R9
+vmultiplier_carrysave
+R0
+!i10b 1
+!s100 oJ0bZXNo0G>fAj9_;Qa0m0
+R1
+ImhgXAKdkg=Bn3f`i;<PXl2
+R2
+R3
+w1745374918
+8/home/lamar/Documents/git/matirx-multiplier-soc/rtl/multiplier_carrysave.v
+F/home/lamar/Documents/git/matirx-multiplier-soc/rtl/multiplier_carrysave.v
+!i122 52
+L0 1 44
+R4
+r1
+!s85 0
+31
+R5
+R6
+R7
+!i113 1
+R8
+R9
+vpe_no_fifo
+R0
+!i10b 1
+!s100 g_]8nLAz>DJN`]`;`e:083
+R1
+I9e@NOEVeALY;0eV7l6NAL3
+R2
+R3
+w1746544174
+8/home/lamar/Documents/git/matirx-multiplier-soc/rtl/pe_no_fifo.v
+F/home/lamar/Documents/git/matirx-multiplier-soc/rtl/pe_no_fifo.v
+!i122 52
+L0 1 141
+R4
+r1
+!s85 0
+31
+R5
+R6
+R7
+!i113 1
+R8
+R9
+vtop
+!s110 1747297015
+!i10b 1
+!s100 VMma]][h7_HnBlPkjEW=Y2
+R1
+IW=;@JPnjNiSgNFnoV=T1<3
+R2
+R3
+w1747143189
+8/home/lamar/Documents/git/matirx-multiplier-soc/rtl/top.v
+F/home/lamar/Documents/git/matirx-multiplier-soc/rtl/top.v
+!i122 15
+L0 9 200
+R4
+r1
+!s85 0
+31
+!s108 1747297014.000000
+!s107 /home/lamar/Documents/git/matirx-multiplier-soc/rtl/top.v|
+!s90 -reportprogress|300|-work|work|-stats=none|/home/lamar/Documents/git/matirx-multiplier-soc/rtl/top.v|
+!i113 1
+R8
+R9
