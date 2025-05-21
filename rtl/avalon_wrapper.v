@@ -27,7 +27,7 @@
 // Assumptions:
 // - Assumes DATA_WIDTH, M, K, N, N_BANKS, PE_ROWS, PE_COLS are parameters
 //   passed down from the top level or defined here.
-// - Assumes Avalon data width matches DATA_WIDTH.
+// - Assumes Avalon data width matches N_BANKS * DATA_WIDTH.
 // - The 'top' module handles the multiplexing of Port A inputs between
 //   external loading (when start_mult is low) and internal controller
 //   execution (when start_mult is high).
@@ -46,24 +46,25 @@ module avalon_wrapper
     )
    (
     // Avalon MM Slave Ports
-    input wire                                                clk,
-    input wire                                                reset_n,    // Asynchronous active-low reset (connect to rst_n)
-    input wire [ID_WIDTH-1:0]                                 address,
-    input wire                                                chipselect,
-    input wire                                                read,
-    input wire                                                write,
-    // Assuming Avalon data width matches DATA_WIDTH for simplicity.
-    // If ACC_WIDTH_PE is wider, you might need wider Avalon ports or multiple reads/writes.
-    input wire [N_BANKS * DATA_WIDTH - 1:0]                   writedata,
-    output reg [DATA_WIDTH * 2 + ((K > 1) ? $clog2(K) : 1):0] readdata,
-    output wire                                               waitrequest // Simple waitrequest (high when busy)
+    input wire                                  clk,
+    input wire                                  reset_n,    // Asynchronous active-low reset (connect to rst_n)
+    input wire [ID_WIDTH-1:0]                   address,
+    input wire                                  chipselect,
+    input wire                                  read,
+    input wire                                  write,
+    input wire [N_BANKS * DATA_WIDTH - 1:0]     writedata,
+    // NEW: Add byteenable input
+    input wire [(N_BANKS * DATA_WIDTH)/8 - 1:0] byteenable,
+    // output reg [DATA_WIDTH * 2 + ((K > 1) ? $clog2(K) : 1):0] readdata,
+    output reg [N_BANKS * DATA_WIDTH - 1:0]     readdata,
+    output wire                                 waitrequest // Simple waitrequest (high when busy)
     );
 
    // Derived Parameters (matching top module/datapath/controller)
    // Hardcoded address widths to avoid $clog2 synthesis issues if necessary
    localparam DATA_IN_WIDTH = N_BANKS * DATA_WIDTH;
-   localparam ADDR_WIDTH_A = $clog2(N_BANKS) + (M/N_BANKS * K > 0) ? $clog2(M/N_BANKS * K) : 1;
-   localparam ADDR_WIDTH_B = $clog2(N_BANKS) + (K * N/N_BANKS > 0) ? $clog2(K * N/N_BANKS) : 1;
+   localparam ADDR_WIDTH_A = $clog2(N_BANKS) + ((M/N_BANKS * K) > 0 ? $clog2(M/N_BANKS * K) : 1); // Corrected ternary operator parentheses
+   localparam ADDR_WIDTH_B = $clog2(N_BANKS) + ((K * N/N_BANKS) > 0 ? $clog2(K * N/N_BANKS) : 1); // Corrected ternary operator parentheses
    localparam ADDR_WIDTH_C = (M * N > 0) ? $clog2(M * N) : 1;
    localparam ACC_WIDTH_PE = DATA_WIDTH * 2 + ((K > 1) ? $clog2(K) : 1); // PE accumulator width must match
    localparam N_PE = PE_ROWS * PE_COLS; // Total number of PEs
@@ -88,8 +89,11 @@ module avalon_wrapper
    reg                                                                                         b_we_reg;
 
    // Wires to connect to the top instance
-   wire                    top_mult_done;
-   wire [ACC_WIDTH_PE-1:0] top_dout_c;
+   wire                             top_mult_done;
+   wire [ACC_WIDTH_PE-1:0]          top_dout_c;
+
+   // Loop variable for byteenable logic
+   integer                          i;
 
 
    // Instantiate the user-provided 'top' module
@@ -184,20 +188,30 @@ module avalon_wrapper
                       end
                     8'd5:
                       begin // A BRAM Load Data Register (Nios II writes the data for A BRAM via Port A)
-                         a_data_reg <= writedata[DATA_IN_WIDTH-1:0]; // Capture the data
                          a_we_reg <= 1; // Pulse high to trigger A BRAM write via Port A for all banks
                          a_en_reg <= 1; // Pulse high to trigger A BRAM write via Port A for all banks
+                         // NEW: Apply byte enables for a_data_reg
+                         for (i = 0; i < DATA_IN_WIDTH / 8; i = i + 1) begin
+                            if (byteenable[i]) begin
+                               a_data_reg[(i*8) +: 8] <= writedata[(i*8) +: 8];
+                            end
+                         end
                       end
                     8'd6:
                       begin // B BRAM Load Address Register (Nios II writes the address for B BRAM via Port A)
                          b_en_reg <= 1;
-                         b_addr_reg <= writedata[N_BANKS * ($clog2(N_BANKS) + ((K * N/N_BANKS > 0) ? $clog2(K * N/N_BANKS) : 1)) - 1:0]; // Capture the address
+                         b_addr_reg <= writedata[N_BANKS * ($clog2(N_BANKS) + ((K * N/N_BANKS > 0) ? $clog2(K * N/N_BANKS) : 1)) - 1:0]; // Capture the addressb_addr_reg <= writedata[ADDR_WIDTH_B-1:0]; // Capture the address
                       end
                     8'd7:
                       begin // B BRAM Load Data Register (Nios II writes the data for B BRAM via Port A)
-                         b_data_reg <= writedata[DATA_IN_WIDTH-1:0]; // Capture the data
                          b_we_reg <= 1; // Pulse high to trigger B BRAM write via Port A for all banks
                          b_en_reg <= 1; // Pulse high to trigger B BRAM write via Port A for all banks
+                         // NEW: Apply byte enables for b_data_reg
+                         for (i = 0; i < DATA_IN_WIDTH / 8; i = i + 1) begin
+                            if (byteenable[i]) begin
+                               b_data_reg[(i*8) +: 8] <= writedata[(i*8) +: 8];
+                            end
+                         end
                       end
                     default:
                       begin
@@ -210,11 +224,13 @@ module avalon_wrapper
                   case (address)
                     8'd1:
                       begin
-                         readdata <= top_mult_done;
+                         // For status register (mult_done), place it at bit 0 and pad with zeros
+                         readdata <= {ACC_WIDTH_PE{1'b0}} | top_mult_done;
                       end
                     8'd2:
                       begin
-                         readdata <= c_addr_reg;
+                         // For read_addr_c, pad with zeros
+                         readdata <= {ACC_WIDTH_PE{1'b0}} | c_addr_reg;
                       end
                     8'd3:
                       begin
@@ -222,7 +238,7 @@ module avalon_wrapper
                       end
                     default:
                       begin
-                         readdata <= {ACC_WIDTH_PE{1'bx}};
+                         readdata <= {ACC_WIDTH_PE{1'bx}}; // Return 'X' for undefined reads
                       end
                   endcase // case (address)
                end // if (chipselect && read)
@@ -230,13 +246,6 @@ module avalon_wrapper
 
      end // always @ (posedge clk or negedge reset_n)
 
-   /*
-   assign readdata = chipselect && read ?
-                     (address == 8'd1 ? {{(ACC_WIDTH_PE-1){1'b0}}, top_mult_done} : // Status Register (mult_done on bit 0)
-                      address == 8'd3 ? top_dout_c[ACC_WIDTH_PE-1:0] : // C BRAM Read Data (output lower bits)
-                      {DATA_WIDTH{1'b0}}) : // Default to 0 for other addresses or when not reading
-                     {DATA_WIDTH{1'b0}}; // Output 0 when not selected or not reading
-   */
    assign waitrequest = chipselect && (read || write) &&
                         ((start_mult_reg || !top_mult_done) || // Busy during execution
                          (write && (address == 8'd5 || address == 8'd7))); // Busy during load data write
