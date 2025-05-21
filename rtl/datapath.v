@@ -43,49 +43,46 @@ module datapath
     parameter PE_COLS = N      // Number of PE columns = N
     )
    (
-    input wire                                                                             clk,                        // Clock signal
-    input wire                                                                             clr_n,                      // Asynchronous active-low reset
+    input wire                                                                                         clk,                        // Clock signal
+    input wire                                                                                         clr_n,                      // Asynchronous active-low reset
 
     // Control Inputs for A and B BRAMs (Port A - Shared for Load/Execution)
-    // These signals will be driven by either the loading mechanism (e.g., testbench)
-    // or the controller during execution.
-    // **UPDATED ADDRESS WIDTHS**
-    input wire [N_BANKS-1:0]                                                               en_a_brams_in,              // Enable for A banks (Port A)
-    input wire [$clog2(N_BANKS) + ((M/N_BANKS * K > 0) ? $clog2(M/N_BANKS * K) : 1) - 1:0] addr_a_brams_in,            // Address for A banks (Port A) - {bank_idx, addr_in_bank}
-    input wire [N_BANKS-1:0]                                                               we_a_brams_in,              // Write enable for A banks (Port A)
-    input wire [K * DATA_WIDTH - 1:0]                                                      din_a_brams_in,             // Data input for writing to A banks (Port A)
+    input wire                                                                                         en_a_brams_in,              // Enable for A banks (Port A)
+    input wire [N_BANKS * ($clog2(N_BANKS) + ((M/N_BANKS * K > 0) ? $clog2(M/N_BANKS * K) : 1)) - 1:0] addr_a_brams_in,            // Address for A banks (Port A) - {bank_idx, addr_in_bank}
+    input wire                                                                                         we_a_brams_in,              // Write enable for A banks (Port A)
+    input wire [N_BANKS * DATA_WIDTH - 1:0]                                                            din_a_brams_in,             // Data input for writing to A banks (Port A)
 
-    input wire [N_BANKS-1:0]                                                               en_b_brams_in,              // Enable for B banks (Port A)
-    input wire [$clog2(N_BANKS) + ((K * N/N_BANKS > 0) ? $clog2(K * N/N_BANKS) : 1) - 1:0] addr_b_brams_in,            // Address for B banks (Port A) - {bank_idx, addr_in_bank}
-    input wire [N_BANKS-1:0]                                                               we_b_brams_in,              // Write enable for B banks (Port A)
-    input wire [K * DATA_WIDTH - 1:0]                                                      din_b_brams_in,             // Data input for writing to B banks (Port A)
+    input wire                                                                                         en_b_brams_in,              // Enable for B banks (Port A)
+    input wire [N_BANKS * ($clog2(N_BANKS) + ((K * N/N_BANKS > 0) ? $clog2(K * N/N_BANKS) : 1)) - 1:0] addr_b_brams_in,            // Address for B banks (Port A) - {bank_idx, addr_in_bank}
+    input wire                                                                                         we_b_brams_in,              // Write enable for B banks (Port A)
+    input wire [N_BANKS * DATA_WIDTH - 1:0]                                                            din_b_brams_in,             // Data input for writing to B banks (Port A)
 
 
     // Control Inputs from Controller (Specific to Execution Flow)
-    input wire [$clog2(K)-1:0]                                                             k_idx_in,                   // Current index for accumulation (0 to K-1)
-    input wire                                                                             en_c_bram_in,               // Enable for writing to C BRAM (Port A)
-    input wire                                                                             we_c_bram_in,               // Write enable for C BRAM (Port A)
-    input wire [((M * N > 0) ? $clog2(M * N) : 1)-1:0]                                     addr_c_bram_in,             // Address for writing to C BRAM (Port A)
-    input wire [$clog2(PE_ROWS*PE_COLS)-1:0]                                               pe_write_idx_in,            // Index for writing PE outputs from buffer
+    input wire [$clog2(K)-1:0]                                                                         k_idx_in,                   // Current index for accumulation (0 to K-1)
+    input wire                                                                                         en_c_bram_in,               // Enable for writing to C BRAM (Port A)
+    input wire                                                                                         we_c_bram_in,               // Write enable for C BRAM (Port A)
+    input wire [((M * N > 0) ? $clog2(M * N) : 1)-1:0]                                                 addr_c_bram_in,             // Address for writing to C BRAM (Port A)
+    input wire [$clog2(PE_ROWS*PE_COLS)-1:0]                                                           pe_write_idx_in,            // Index for writing PE outputs from buffer
 
-    input wire                                                                             pe_start_in,                // Start signal for PEs
-    input wire                                                                             pe_valid_in_in,             // Valid input signal for PEs
-    input wire                                                                             pe_last_in,                 // Last input signal for PEs
+    input wire                                                                                         pe_start_in,                // Start signal for PEs
+    input wire                                                                                         pe_valid_in_in,             // Valid input signal for PEs
+    input wire                                                                                         pe_last_in,                 // Last input signal for PEs
 
-    input wire                                                                             pe_output_capture_en,       // Enable to capture PE outputs into buffer
-    input wire                                                                             pe_output_buffer_reset,     // Reset the PE output buffer
+    input wire                                                                                         pe_output_capture_en,       // Enable to capture PE outputs into buffer
+    input wire                                                                                         pe_output_buffer_reset,     // Reset the PE output buffer
 
 
     // Status Outputs to Controller
-    output wire [(PE_ROWS * PE_COLS * (DATA_WIDTH * 2 + ((K > 1) ? $clog2(K) : 1)))-1:0]   pe_c_out_out,               // Flattened PE results before buffer
-    output wire [(PE_ROWS * PE_COLS)-1:0]                                                  pe_outputs_valid_out,       // Flattened PE output_valid signals
-    output reg                                                                             pe_output_buffer_valid_out, // Flag indicating valid data in the buffer
+    output wire [(PE_ROWS * PE_COLS * (DATA_WIDTH * 2 + ((K > 1) ? $clog2(K) : 1)))-1:0]               pe_c_out_out,               // Flattened PE results before buffer
+    output wire [(PE_ROWS * PE_COLS)-1:0]                                                              pe_outputs_valid_out,       // Flattened PE output_valid signals
+    output reg                                                                                         pe_output_buffer_valid_out, // Flag indicating valid data in the buffer
 
     // Output C BRAM Reading Interface (for external system to read the result)
     // This interface remains the same to read the final result from C BRAM.
-    input wire                                                                             read_en_c,                  // External read enable for C BRAM Port B
-    input wire [((M * N > 0) ? $clog2(M * N) : 1)-1:0]                                     read_addr_c,                // External read address for C BRAM Port B
-    output wire [(DATA_WIDTH * 2 + ((K > 1) ? $clog2(K) : 1))-1:0]                         dout_c                      // Data output from C BRAM
+    input wire                                                                                         read_en_c,                  // External read enable for C BRAM Port B
+    input wire [((M * N > 0) ? $clog2(M * N) : 1)-1:0]                                                 read_addr_c,                // External read address for C BRAM Port B
+    output wire [(DATA_WIDTH * 2 + ((K > 1) ? $clog2(K) : 1))-1:0]                                     dout_c                      // Data output from C BRAM
     );
 
    // Derived Parameters (matching datapath)
@@ -117,33 +114,22 @@ module datapath
    reg [ACC_WIDTH_PE-1:0]  pe_output_buffer[PE_ROWS*PE_COLS-1:0]; // Buffer to hold PE results
 
    // **Internal wires to extract bank index and address within bank from flattened ports**
-   wire [ADDR_WIDTH_BANK-1:0] addr_a_bank_idx;
-   wire [ADDR_WIDTH_A_BANK-1:0] addr_a_in_bank;
-   wire [ADDR_WIDTH_BANK-1:0]   addr_b_bank_idx;
-   wire [ADDR_WIDTH_B_BANK-1:0] addr_b_in_bank;
+   wire [ADDR_WIDTH_BANK-1:0] addr_a_bank_idx[N_BANKS-1:0];
+   wire [ADDR_WIDTH_A_BANK-1:0] addr_a_in_bank[N_BANKS-1:0];
+   wire [ADDR_WIDTH_BANK-1:0]   addr_b_bank_idx[N_BANKS-1:0];
+   wire [ADDR_WIDTH_B_BANK-1:0] addr_b_in_bank[N_BANKS-1:0];
 
 
    // Internal wires to slice the flattened data ports from the top
    wire [DATA_WIDTH-1:0]        din_a_bram_sliced [N_BANKS-1:0];
    wire [DATA_WIDTH-1:0]        din_b_bram_sliced [N_BANKS-1:0];
 
+   // Internal wires to slice the flattened data ports from the top
+   wire [ADDR_WIDTH_A-1:0]      addr_a_bram_sliced [N_BANKS-1:0];
+   wire [ADDR_WIDTH_B-1:0]      addr_b_bram_sliced [N_BANKS-1:0];
 
    // Internal wire for C BRAM inputs (from the PE output buffer)
    wire [ACC_WIDTH_PE-1:0]      din_c_bram; // Data input to C BRAM
-
-   // **Extract bank index and address within bank from incoming flattened addresses**
-   // assign addr_a_bank_idx = addr_a_brams_in[$clog2(N_BANKS) + ADDR_WIDTH_A_BANK - 1 : ADDR_WIDTH_A_BANK];
-   // assign addr_a_in_bank = addr_a_brams_in[ADDR_WIDTH_A_BANK - 1 : 0];
-
-   assign addr_a_bank_idx = addr_a_brams_in[$clog2(N_BANKS) + ((M/N_BANKS * K > 0) ? $clog2(M/N_BANKS * K) : 1)-1:$clog2(N_BANKS)];
-   assign addr_a_in_bank = addr_a_brams_in[$clog2(N_BANKS)-1:0];
-
-   // assign addr_b_bank_idx = addr_b_brams_in[$clog2(N_BANKS) + ADDR_WIDTH_B_BANK - 1 : ADDR_WIDTH_B_BANK];
-   // assign addr_b_in_bank = addr_b_brams_in[ADDR_WIDTH_B_BANK - 1 : 0];
-
-
-   assign addr_b_bank_idx = addr_b_brams_in[$clog2(N_BANKS) + ((K * N/N_BANKS > 0) ? $clog2(K * N/N_BANKS) : 1)-1:$clog2(N_BANKS)];
-   assign addr_b_in_bank = addr_b_brams_in[$clog2(N_BANKS)-1:0];
 
    // Connect flattened data ports to sliced internal wires
    genvar                       j_gen;
@@ -151,8 +137,25 @@ module datapath
       for (j_gen = 0; j_gen < N_BANKS; j_gen = j_gen + 1)
         begin : slice_din_ports
            // Port A of BRAMs (driven by top/controller)
-           assign din_a_bram_sliced[j_gen] = din_a_brams_in[(j_gen * DATA_WIDTH) +: DATA_WIDTH];
-           assign din_b_bram_sliced[j_gen] = din_b_brams_in[(j_gen * DATA_WIDTH) +: DATA_WIDTH];
+           assign din_a_bram_sliced[j_gen] = din_a_brams_in[(j_gen * DATA_WIDTH) + DATA_WIDTH - 1 -: DATA_WIDTH];
+           assign din_b_bram_sliced[j_gen] = din_b_brams_in[(j_gen * DATA_WIDTH) + DATA_WIDTH - 1 -: DATA_WIDTH];
+        end
+   endgenerate
+   generate
+      for (j_gen = 0; j_gen < N_BANKS; j_gen = j_gen + 1)
+        begin : slice_addr_ports
+           // Port A of BRAMs (driven by top/controller)
+           assign addr_a_bram_sliced[j_gen] = addr_a_brams_in[(j_gen * ADDR_WIDTH_A) + ADDR_WIDTH_A - 1 -: ADDR_WIDTH_A];
+           assign addr_b_bram_sliced[j_gen] = addr_b_brams_in[(j_gen * ADDR_WIDTH_B) + ADDR_WIDTH_B - 1 -: ADDR_WIDTH_B];
+        end
+   endgenerate
+   generate
+      for (j_gen = 0; j_gen < N_BANKS; j_gen = j_gen + 1)
+        begin
+           assign addr_a_bank_idx[j_gen] = addr_a_brams_in[j_gen * ADDR_WIDTH_A + ADDR_WIDTH_A - 1 -: ADDR_WIDTH_BANK];
+           assign addr_a_in_bank[j_gen] = addr_a_brams_in[j_gen * ADDR_WIDTH_A + ADDR_WIDTH_A_BANK - 1 -: ADDR_WIDTH_B_BANK];
+           assign addr_b_bank_idx[j_gen] = addr_b_brams_in[j_gen * ADDR_WIDTH_B + ADDR_WIDTH_B - 1 -: ADDR_WIDTH_BANK];
+           assign addr_b_in_bank[j_gen] = addr_b_brams_in[j_gen * ADDR_WIDTH_B + ADDR_WIDTH_B_BANK - 1 -: ADDR_WIDTH_B_BANK];
         end
    endgenerate
 
@@ -186,9 +189,9 @@ module datapath
            a_bram_inst (
                         .clk    (clk),
                         // **Connect Port A based on extracted bank index**
-                        .en_a   (en_a_brams_in && (addr_a_bank_idx == gi_a)), // Enable only for the selected bank
-                        .we_a   (we_a_brams_in && (addr_a_bank_idx == gi_a)), // Write enable only for the selected bank
-                        .addr_a (addr_a_brams_in), // Address within the selected bank
+                        .en_a   (en_a_brams_in && (addr_a_bank_idx[gi_a] == gi_a)), // Enable only for the selected bank
+                        .we_a   (we_a_brams_in && (addr_a_bank_idx[gi_a] == gi_a)), // Write enable only for the selected bank
+                        .addr_a (addr_a_bram_sliced[gi_a]), // Address within the selected bank
                         .din_a  (din_a_bram_sliced[gi_a]), // Data input for the selected bank
                         .dout_a (dout_a_brams[gi_a]), // Port A: Read data out (to PE array)
 
@@ -212,9 +215,9 @@ module datapath
            b_bram_inst (
                         .clk    (clk),
                         // **Connect Port A based on extracted bank index**
-                        .en_a   (en_b_brams_in && (addr_b_bank_idx == gi_b)), // Enable only for the selected bank
-                        .we_a   (we_b_brams_in && (addr_b_bank_idx == gi_b)), // Write enable only for the selected bank
-                        .addr_a (addr_b_brams_in), // Address within the selected bank
+                        .en_a   (en_b_brams_in && (addr_b_bank_idx[gi_b] == gi_b)), // Enable only for the selected bank
+                        .we_a   (we_b_brams_in && (addr_b_bank_idx[gi_b] == gi_b)), // Write enable only for the selected bank
+                        .addr_a (addr_b_bram_sliced[gi_b]), // Address within the selected bank
                         .din_a  (din_b_bram_sliced[gi_b]), // Data input for the selected bank
                         .dout_a (dout_b_brams[gi_b]), // Port A: Read data out (to PE array)
 

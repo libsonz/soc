@@ -37,7 +37,7 @@ module datapath_tb;
    parameter ADDR_WIDTH_PE_IDX = ($clog2(N_PE > 0 ? N_PE : 1) > 0) ? $clog2(N_PE > 0 ? N_PE : 1) : 1;
 
    parameter BANK_IDX_WIDTH = $clog2(N_BANKS);
-   parameter ADDR_IN_BANK_WIDTH = $clog2(K**2);
+   parameter ADDR_IN_BANK_WIDTH = ((M/N_BANKS * K > 0) ? $clog2(M/N_BANKS * K) : 1);
 
    // Clock Period
    parameter CLK_PERIOD = 10; // 10 ns period = 100 MHz
@@ -55,67 +55,67 @@ module datapath_tb;
    reg [$clog2(K > 0 ? K : 1)-1:0] k_idx_in;
 
    reg                             en_a_brams_in;
-   reg [$clog2(N_BANKS) + ((M/N_BANKS * K > 0) ? $clog2(M/N_BANKS * K) : 1) - 1:0] addr_a_brams_in;
-   reg                                                                             we_a_brams_in;
-   reg [N_BANKS * DATA_WIDTH-1:0]                                                  din_a_brams_in;
+   reg [N_BANKS * ($clog2(N_BANKS) + ((M/N_BANKS * K > 0) ? $clog2(M/N_BANKS * K) : 1)) - 1:0] addr_a_brams_in;
+   reg                                                                                         we_a_brams_in;
+   reg [N_BANKS * DATA_WIDTH-1:0]                                                              din_a_brams_in;
 
-   reg                                                                             en_b_brams_in;
-   reg [$clog2(N_BANKS) + ((K * N/N_BANKS > 0) ? $clog2(K * N/N_BANKS) : 1) - 1:0] addr_b_brams_in;
-   reg                                                                             we_b_brams_in;
-   reg [N_BANKS * DATA_WIDTH-1:0]                                                  din_b_brams_in;
+   reg                                                                                         en_b_brams_in;
+   reg [N_BANKS * ($clog2(N_BANKS) + ((K * N/N_BANKS > 0) ? $clog2(K * N/N_BANKS) : 1)) - 1:0] addr_b_brams_in;
+   reg                                                                                         we_b_brams_in;
+   reg [N_BANKS * DATA_WIDTH-1:0]                                                              din_b_brams_in;
 
-   reg                                                                             en_c_bram_in;
-   reg                                                                             we_c_bram_in;
-   reg [ADDR_WIDTH_C-1:0]                                                          addr_c_bram_in;
-   reg [ADDR_WIDTH_PE_IDX-1:0]                                                     pe_write_idx_in;
+   reg                                                                                         en_c_bram_in;
+   reg                                                                                         we_c_bram_in;
+   reg [ADDR_WIDTH_C-1:0]                                                                      addr_c_bram_in;
+   reg [ADDR_WIDTH_PE_IDX-1:0]                                                                 pe_write_idx_in;
 
-   reg                                                                             pe_start_in;
-   reg                                                                             pe_valid_in_in;
-   reg                                                                             pe_last_in;
+   reg                                                                                         pe_start_in;
+   reg                                                                                         pe_valid_in_in;
+   reg                                                                                         pe_last_in;
 
-   reg                                                                             pe_output_capture_en;
-   reg                                                                             pe_output_buffer_reset;
+   reg                                                                                         pe_output_capture_en;
+   reg                                                                                         pe_output_buffer_reset;
 
-   wire [(PE_ROWS * PE_COLS * ACC_WIDTH_PE)-1:0]                                   pe_c_out_out;
-   wire [(PE_ROWS * PE_COLS > 0 ? PE_ROWS * PE_COLS : 1)-1:0]                      pe_outputs_valid_out;
-   wire                                                                            pe_output_buffer_valid_out;
+   wire [(PE_ROWS * PE_COLS * ACC_WIDTH_PE)-1:0]                                               pe_c_out_out;
+   wire [(PE_ROWS * PE_COLS > 0 ? PE_ROWS * PE_COLS : 1)-1:0]                                  pe_outputs_valid_out;
+   wire                                                                                        pe_output_buffer_valid_out;
 
-   reg                                                                             read_en_c;
-   reg [ADDR_WIDTH_C-1:0]                                                          read_addr_c;
-   wire [ACC_WIDTH_PE-1:0]                                                         dout_c;
+   reg                                                                                         read_en_c;
+   reg [ADDR_WIDTH_C-1:0]                                                                      read_addr_c;
+   wire [ACC_WIDTH_PE-1:0]                                                                     dout_c;
 
    //--------------------------------------------------------------------------
    // Internal variables for file handling, loops, and address calculation
-   integer                                                                         i, j, k; // Loop variables
-   integer                                                                         test_case; // Current test case number (0 to NUM_TEST_CASES-1)
-   integer                                                                         pass_count; // Counter for passed test cases
-   integer                                                                         fail_count; // Counter for failed test cases
-   integer                                                                         total_errors; // Total element mismatches across all test cases
-   integer                                                                         errors;
+   integer                                                                                     i, j, k; // Loop variables
+   integer                                                                                     test_case; // Current test case number (0 to NUM_TEST_CASES-1)
+   integer                                                                                     pass_count; // Counter for passed test cases
+   integer                                                                                     fail_count; // Counter for failed test cases
+   integer                                                                                     total_errors; // Total element mismatches across all test cases
+   integer                                                                                     errors;
 
    // Sample Input Matrices (M x K and K x N) and Expected Output Matrix (M x N)
    // Using simple integer values for demonstration.
    // For real testing, load from files using $readmemh or similar.
-   reg [DATA_WIDTH-1:0]                                                            matrix_A [M-1:0][K-1:0];
-   reg [DATA_WIDTH-1:0]                                                            matrix_B [K-1:0][N-1:0];
-   reg [ACC_WIDTH_PE-1:0]                                                          expected_C [M-1:0][N-1:0];
-   reg [ACC_WIDTH_PE-1:0]                                                          actual_C [M*N-1:0]; // Flattened array to store read results
+   reg [DATA_WIDTH-1:0]                                                                        matrix_A [M-1:0][K-1:0];
+   reg [DATA_WIDTH-1:0]                                                                        matrix_B [K-1:0][N-1:0];
+   reg [ACC_WIDTH_PE-1:0]                                                                      expected_C [M-1:0][N-1:0];
+   reg [ACC_WIDTH_PE-1:0]                                                                      actual_C [M-1:0][N-1:0]; // Flattened array to store read results
 
-   reg [N_BANKS * DATA_WIDTH-1:0]                                                  partitioned_matrix_A [N_BANKS-1:0];
-   reg [N_BANKS * DATA_WIDTH-1:0]                                                  partitioned_matrix_B [N_BANKS-1:0];
+   reg [N_BANKS * DATA_WIDTH-1:0]                                                              partitioned_matrix_A [N_BANKS-1:0];
+   reg [N_BANKS * DATA_WIDTH-1:0]                                                              partitioned_matrix_B [N_BANKS-1:0];
 
    // Internal testbench arrays to hold matrix data and expected results
-   reg [DATA_WIDTH-1:0]                                                            testbench_A [0:M-1][0:K-1];
-   reg [DATA_WIDTH-1:0]                                                            testbench_B [0:K-1][0:N-1];
+   reg [DATA_WIDTH-1:0]                                                                        testbench_A [0:M-1][0:K-1];
+   reg [DATA_WIDTH-1:0]                                                                        testbench_B [0:K-1][0:N-1];
 
    // This stores the actual result read from the DUT's C BRAM
 
    // Testbench Control Parameters
-   parameter                                                                       NUM_TEST_CASES = 100; // How many test case directories to read (test_000 to test_099)
+   parameter                                                                                   NUM_TEST_CASES = 100; // How many test case directories to read (test_000 to test_099)
    // !! IMPORTANT: Update this path to where your test case directories are located !!
    // Use a reg array for the base path
-   parameter [8*100-1:0]                                                           TEST_CASE_DIR_BASE = "/home/lamar/Documents/git/matrix-multiplier/testcases"; // Base directory for test cases (Max 100 chars)
-   parameter                                                                       MAX_FILENAME_LEN = 150; // Maximum length for generated filenames
+   parameter [8*100-1:0]                                                                       TEST_CASE_DIR_BASE = "/home/lamar/Documents/git/matrix-multiplier/testcases"; // Base directory for test cases (Max 100 chars)
+   parameter                                                                                   MAX_FILENAME_LEN = 150; // Maximum length for generated filenames
 
 
    //--------------------------------------------------------------------------
@@ -186,6 +186,8 @@ module datapath_tb;
       read_en_c = 0;
       read_addr_c = 0;
       errors = 0;
+      fail_count = 0;
+      pass_count = 0;
 
       $display("--------------------------------------------------");
       $display(" Starting Datapath Testbench ");
@@ -227,16 +229,13 @@ module datapath_tb;
            $display("Result verification complete.");
            #(CLK_PERIOD);
 
-        end
-      if (total_errors == 0) begin
-         $display("--------------------------------------------------");
-         $display(" Testbench PASSED!");
-         $display("--------------------------------------------------");
-      end else begin
-         $display("--------------------------------------------------");
-         $display(" Testbench FAILED with %0d errors!", total_errors);
-         $display("--------------------------------------------------");
-      end
+        end // for (test_case = 0; test_case < NUM_TEST_CASES; test_case = test_case + 1)
+
+      $display("--------------------------------------------------");
+      $display(" Pass cases : %d", pass_count);
+      $display(" Fail cases : %d", fail_count);
+      $display(" Testbench FAILED with %0d errors!", total_errors);
+      $display("--------------------------------------------------");
 
       $finish; // End simulation
    end // initial begin
@@ -378,7 +377,7 @@ module datapath_tb;
    endtask
 
    //--------------------------------------------------------------------------
-   // Tasks
+   // Load matrices into bram
    //--------------------------------------------------------------------------
 
    // Task to load sample matrices A and B into BRAMs via Port A
@@ -399,13 +398,14 @@ module datapath_tb;
                    // Combined address: {r % N_BANKS, (r / N_BANKS) * K + c}
 
                    $display("  Loading A[%0d][%0d] (Bank %0d, Addr %0d) with %h", r, c, r, c, partitioned_matrix_A[r][(c * DATA_WIDTH) +: DATA_WIDTH]);
+                   // Address for A
                    // addr in bank
-                   addr_a_brams_in[$clog2(N_BANKS)-1:0] = c;
+                   addr_a_brams_in[c * ADDR_WIDTH_A + ADDR_IN_BANK_WIDTH - 1 -: ADDR_IN_BANK_WIDTH] = r;
+
                    // bank idx
-                   addr_a_brams_in[$clog2(N_BANKS) + ((M/N_BANKS * K > 0) ? $clog2(M/N_BANKS * K) : 1)-1:$clog2(N_BANKS)] = r;
-                   // din_a_brams_in[r * DATA_WIDTH +: DATA_WIDTH]= testbench_A[r][c];
-                   @(posedge clk) #0.1;
+                   addr_a_brams_in[c * ADDR_WIDTH_A + ADDR_WIDTH_A - 1 -: BANK_IDX_WIDTH] = c;
                 end // for (c = 0; c < K; c = c + 1)
+              @(posedge clk) #1;
            end // for (r = 0; r < M; r = r + 1)
 
          @(posedge clk)
@@ -427,13 +427,14 @@ module datapath_tb;
                    // Combined address: {c % N_BANKS, r * (N / N_BANKS) + c / N_BANKS}
 
                    $display("  Loading B[%0d][%0d] (Bank %0d, Addr %0d) with %h", r, c, c, r, partitioned_matrix_B[c][(r * DATA_WIDTH) +: DATA_WIDTH]);
+                   // Address for B
                    // addr in bank
-                   addr_b_brams_in[$clog2(N_BANKS)-1:0] = c;
+                   addr_b_brams_in[r * ADDR_WIDTH_A + ADDR_IN_BANK_WIDTH - 1 -: ADDR_IN_BANK_WIDTH] = c;
+
                    // bank idx
-                   addr_b_brams_in[$clog2(N_BANKS) + ((K * N/N_BANKS > 0) ? $clog2(K * N/N_BANKS) : 1)-1:$clog2(N_BANKS)] = r;
-                   // din_b_brams_in[c * DATA_WIDTH +: DATA_WIDTH] = testbench_B[r][c];
-                   @(posedge clk) #0.1;
+                   addr_b_brams_in[r * ADDR_WIDTH_A + ADDR_WIDTH_A - 1 -: BANK_IDX_WIDTH] = r;
                 end // for (c = 0; c < N; c = c + 1)
+              @(posedge clk) #1;
            end // for (r = 0; r < K; r = r + 1
          @(posedge clk)
            begin
@@ -442,6 +443,15 @@ module datapath_tb;
            end
       end
    endtask
+
+
+   // Verify BRAM after loading
+   task verify_brams_loading;
+      begin
+
+      end
+   endtask
+
 
    // Task to simulate controller signals for multiplication execution
    task execute_multiplication;
@@ -457,61 +467,67 @@ module datapath_tb;
          k_idx_in = 0; // Set index for the data being requested
          en_a_brams_in = 1;
          en_b_brams_in = 1;
+         we_a_brams_in = 0;
+         we_b_brams_in = 0;
 
          for (bank_idx = 0; bank_idx < N_BANKS; bank_idx = bank_idx + 1)
            begin
               // Address for A
               // addr in bank
-              addr_a_brams_in[$clog2(N_BANKS)-1:0] = 0;
+              addr_a_brams_in[bank_idx * ADDR_WIDTH_A + ADDR_IN_BANK_WIDTH - 1 -: ADDR_IN_BANK_WIDTH] = 0;
+
               // bank idx
-              addr_a_brams_in[$clog2(N_BANKS) + ((M/N_BANKS * K > 0) ? $clog2(M/N_BANKS * K) : 1)-1:$clog2(N_BANKS)] = bank_idx;
+              addr_a_brams_in[bank_idx * ADDR_WIDTH_A + ADDR_WIDTH_A - 1 -: BANK_IDX_WIDTH] = bank_idx;
+
               // Address for B
               // addr in bank
-              addr_b_brams_in[$clog2(N_BANKS)-1:0] = 0;
+              addr_b_brams_in[bank_idx * ADDR_WIDTH_B + ADDR_IN_BANK_WIDTH - 1 -: ADDR_IN_BANK_WIDTH] = 0;
+
               // bank idx
-              addr_b_brams_in[$clog2(N_BANKS) + ((K * N/N_BANKS > 0) ? $clog2(K * N/N_BANKS) : 1)-1:$clog2(N_BANKS)] = bank_idx;
-              @(posedge clk);
-              #1;
+              addr_b_brams_in[bank_idx * ADDR_WIDTH_B + ADDR_WIDTH_B - 1 -: BANK_IDX_WIDTH] = bank_idx;
            end
+         @(posedge clk); #1;
 
          $display("@%0t: Pre-fetching BRAM data for k_step = 0. Addresses set.", $time);
          @(posedge clk); #1; // Wait one cycle. BRAM read for k_step=0 is initiated.
          $display("@%0t: BRAM read for k_step = 0 initiated. Data will be ready next cycle.", $time);
 
-         // Simulate accumulation steps (K cycles)
-         for (k = 0; k < K; k = k + 1) begin
-            @(posedge clk) begin
-               k_idx_in = k;
-               pe_valid_in_in = 1;
-               pe_start_in = (k == 0); // Start pulse on the first step
-               pe_last_in = (k == K - 1); // Last pulse on the final step
 
-               // Controller would drive BRAM read enables and addresses here
-               // based on k_idx_in and PE positions.
-               // For this datapath testbench, we are assuming the controller
-               // is external and provides these signals. We will just apply
-               // a simplified read enable for demonstration.
-               en_a_brams_in = 1; // Assume A BRAMs enabled during accumulation
-               en_b_brams_in = 1; // Assume B BRAMs enabled during accumulation
-               if(k < K - 1)
-                 begin
-                    for (bank_idx = 0; bank_idx < N_BANKS; bank_idx = bank_idx + 1)
-                      begin
-                         // Address for A
-                         // addr in bank
-                         addr_a_brams_in[$clog2(N_BANKS)-1:0] = k + 1;
-                         // bank idx
-                         addr_a_brams_in[$clog2(N_BANKS) + ((M/N_BANKS * K > 0) ? $clog2(M/N_BANKS * K) : 1)-1:$clog2(N_BANKS)] = bank_idx;
-                         // Address for B
-                         // addr in bank
-                         addr_b_brams_in[$clog2(N_BANKS)-1:0] = k + 1;
-                         // bank idx
-                         addr_b_brams_in[$clog2(N_BANKS) + ((K * N/N_BANKS > 0) ? $clog2(K * N/N_BANKS) : 1)-1:$clog2(N_BANKS)] = bank_idx;
-                      end
-                    $display("  Accumulation step %0d: pe_start_in=%0b, pe_valid_in_in=%0b, pe_last_in=%0b", k, pe_start_in, pe_valid_in_in, pe_last_in);
-                 end // if (k < K - 1)
-            end
-         end
+         // Simulate accumulation steps (K cycles)
+         for (k = 0; k < K; k = k + 1)
+           begin
+              begin
+                 k_idx_in = k;
+                 pe_valid_in_in = 1;
+                 pe_start_in = (k == 0); // Start pulse on the first step
+                 pe_last_in = (k == K - 1); // Last pulse on the final step
+                 if(k < K - 1)
+                   begin
+                      for (bank_idx = 0; bank_idx < N_BANKS; bank_idx = bank_idx + 1)
+                        begin
+                           // Address for A
+                           // addr in bank
+                           addr_a_brams_in[bank_idx * ADDR_WIDTH_A + ADDR_IN_BANK_WIDTH - 1 -: ADDR_IN_BANK_WIDTH] = k + 1;
+
+                           // bank idx
+                           addr_a_brams_in[bank_idx * ADDR_WIDTH_A + ADDR_WIDTH_A - 1 -: BANK_IDX_WIDTH] = bank_idx;
+
+                           // Address for B
+                           // addr in bank
+                           addr_b_brams_in[bank_idx * ADDR_WIDTH_B + ADDR_IN_BANK_WIDTH - 1 -: ADDR_IN_BANK_WIDTH] = k + 1;
+
+                           // bank idx
+                           addr_b_brams_in[bank_idx * ADDR_WIDTH_B + ADDR_WIDTH_B - 1 -: BANK_IDX_WIDTH] = bank_idx;
+                        end
+                      @(posedge clk);
+                      #1;
+                      $display("  Accumulation step %0d: pe_start_in=%0b, pe_valid_in_in=%0b, pe_last_in=%0b", k, pe_start_in, pe_valid_in_in, pe_last_in);
+                   end // if (k < K - 1)
+              end
+           end
+
+
+
 
          // Deassert PE input control signals after accumulation cycles
          @(posedge clk) begin
@@ -539,6 +555,7 @@ module datapath_tb;
          end else begin
             $display("  Error: PE output buffer not valid after capture!");
             total_errors = total_errors + 1;
+
          end
 
          // Simulate writing from buffer to C BRAM
@@ -566,7 +583,6 @@ module datapath_tb;
    // ---------------------- //
    task verify_results;
       begin : verify_results
-         // No inputs/outputs needed as it compares expected_C and actual_C
          integer row_v; // Declare variables at start of task
          integer col_v; // Declare variables at start of task
          integer element_errors; // Declare variables at start of task
@@ -590,37 +606,19 @@ module datapath_tb;
                         begin
                            $display("Test Case %0d FAIL: C[%0d][%0d] mismatch! Actual %h, Expected %h",
                                     test_case, row_v, col_v, actual_C[row_v][col_v], expected_C[row_v][col_v]);
-                           element_errors = element_errors + 1; // Increment error count
+                           fail_count = fail_count + 1;
                         end // else begin
                       else
                         begin
                            $display("Test Case %0d PASS: C[%0d][%0d] = %h",
-                                    test_case, row_v, col_v, dout_c);
+                                    test_case, row_v, col_v, actual_C[row_v][col_v]);
+                           pass_count = pass_count + 1;
                         end // else: !if(actual_C[row_v][col_v] !== expected_C[row_v][col_v])
                       // $display("  C[%0d][%0d] matches: %h", row_v, col_v, actual_C[row_v][col_v]); // Uncomment for successful matches
                       // end
                    end
               end // for (row_v = 0; row_v < M; row_v = row_v + 1)
             read_en_c = 0;
-
-            // Update overall statistics
-            total_errors = total_errors + element_errors;
-            error_percentage = (element_errors * 100.0) / (M * N);
-
-            // Report test case result
-            if (element_errors == 0)
-              begin
-                 $display("Test Case %0d PASSED.", test_case);
-                 pass_count = pass_count + 1;
-              end
-            else
-              begin
-                 $display("Test Case %0d FAILED - %0d errors (%0.2f%%).",
-                          test_case, element_errors, error_percentage);
-                 fail_count = fail_count + 1;
-              end
-            $display("--------------------------------------");
-
          end
       end
 
