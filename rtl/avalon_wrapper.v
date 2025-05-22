@@ -232,7 +232,7 @@ module avalon_wrapper
                          // For read_addr_c, pad with zeros
                          readdata <= {ACC_WIDTH_PE{1'b0}} | c_addr_reg;
                       end
-                    8'd3:
+                    8'd18:
                       begin
                          readdata <= top_dout_c;
                       end
