@@ -172,21 +172,21 @@ module avalon_wrapper
                begin
                   // Write transactions
                   case (address)
-                    8'd0:
+                    8'h00:
                       begin // Control Register
                          start_mult_reg <= writedata[0]; // Assuming start_mult is bit 0 (pulse)
                          clrn_reg <= writedata[1]; // Assuming reset pulse is bit 1 (pulse)
                       end
-                    8'd2:
+                    8'h10:
                       begin // C BRAM Read Address Register (Nios II writes the address it wants to read from C)
                          c_addr_reg <= writedata[ADDR_WIDTH_C-1:0]; // Capture the address to read from C BRAM
                       end
-                    8'd4:
+                    8'h20:
                       begin // A BRAM Load Address Register (Nios II writes the address for A BRAM via Port A)
                          a_en_reg <= 1;
                          a_addr_reg <= writedata[N_BANKS * ($clog2(N_BANKS) + ((M/N_BANKS * K > 0) ? $clog2(M/N_BANKS * K) : 1)) - 1:0]; // Capture the address
                       end
-                    8'd5:
+                    8'h28:
                       begin // A BRAM Load Data Register (Nios II writes the data for A BRAM via Port A)
                          a_we_reg <= 1; // Pulse high to trigger A BRAM write via Port A for all banks
                          a_en_reg <= 1; // Pulse high to trigger A BRAM write via Port A for all banks
@@ -197,12 +197,12 @@ module avalon_wrapper
                             end
                          end
                       end
-                    8'd6:
+                    8'h30:
                       begin // B BRAM Load Address Register (Nios II writes the address for B BRAM via Port A)
                          b_en_reg <= 1;
                          b_addr_reg <= writedata[N_BANKS * ($clog2(N_BANKS) + ((K * N/N_BANKS > 0) ? $clog2(K * N/N_BANKS) : 1)) - 1:0]; // Capture the addressb_addr_reg <= writedata[ADDR_WIDTH_B-1:0]; // Capture the address
                       end
-                    8'd7:
+                    8'h38:
                       begin // B BRAM Load Data Register (Nios II writes the data for B BRAM via Port A)
                          b_we_reg <= 1; // Pulse high to trigger B BRAM write via Port A for all banks
                          b_en_reg <= 1; // Pulse high to trigger B BRAM write via Port A for all banks
@@ -222,17 +222,17 @@ module avalon_wrapper
              else if (chipselect && read)
                begin
                   case (address)
-                    8'd1:
+                    8'h08:
                       begin
                          // For status register (mult_done), place it at bit 0 and pad with zeros
                          readdata <= {ACC_WIDTH_PE{1'b0}} | top_mult_done;
                       end
-                    8'd2:
+                    8'h10:
                       begin
                          // For read_addr_c, pad with zeros
                          readdata <= {ACC_WIDTH_PE{1'b0}} | c_addr_reg;
                       end
-                    8'd18:
+                    8'h18:
                       begin
                          readdata <= top_dout_c;
                       end
@@ -248,7 +248,7 @@ module avalon_wrapper
 
    assign waitrequest = chipselect && (read || write) &&
                         ((start_mult_reg || !top_mult_done) || // Busy during execution
-                         (write && (address == 8'd5 || address == 8'd7))); // Busy during load data write
+                         (write && (address == 8'h28 || address == 8'd38))); // Busy during load data write
 
 
 endmodule
